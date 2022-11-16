@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 mongoose.connect(process.env['MONGO_URI']);
 
 const { User, createUser } = require('./model/user.model');
-const { createExercise } = require('./model/exercise.model');
+const { Exercise, createExercise } = require('./model/exercise.model');
 
 app.use(cors());
 app.use(express.static('public'));
@@ -78,10 +78,41 @@ app.post('/api/users/:uid/exercises', async (req, res) => {
     if (error) return res.json({ error });
     const description = data.description;
     const duration = data.duration;
-    const date = data.date;
+    const date = new Date(data.date).toDateString();
 
     res.json({ username, description, duration, date, _id: uid });
   });
+});
+
+/**
+ * 获取 _id 用户的 exercise 运动日志
+ * Solution 1
+ */
+app.get('/api/users/:uid/logs', async (req, res) => {
+  const uid = req.params.uid;
+  const user = await User.findById(uid);
+  const username = user.username;
+  let count = await Exercise.countDocuments({ user: uid });
+  let { from, to, limit } = req.query;
+
+  if (limit && limit !== '0') {
+    limit = Number.parseInt(limit);
+    count = Math.min(count, limit);
+  }
+
+  const exercises = await Exercise.find(
+    { user: uid },
+    'description duration date -_id',
+    { limit: limit }
+  );
+
+  const log = exercises.map(item => {
+    item = item.toObject();
+    item.date = new Date(item.date).toDateString();
+    return item;
+  });
+
+  res.json({ _id: uid, username, count, log });
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
