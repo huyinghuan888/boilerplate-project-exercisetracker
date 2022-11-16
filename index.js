@@ -92,8 +92,12 @@ app.get('/api/users/:uid/logs', async (req, res) => {
   const uid = req.params.uid;
   const user = await User.findById(uid);
   const username = user.username;
-  let count = await Exercise.countDocuments({ user: uid });
+
   let { from, to, limit } = req.query;
+  let count = await Exercise.countDocuments({
+    user: uid,
+    date: { $gt: from, $lt: to }
+  });
 
   if (limit && limit !== '0') {
     limit = Number.parseInt(limit);
@@ -101,7 +105,10 @@ app.get('/api/users/:uid/logs', async (req, res) => {
   }
 
   const exercises = await Exercise.find(
-    { user: uid },
+    {
+      user: uid,
+      date: { $gt: from, $lt: to }
+    },
     'description duration date -_id',
     { limit: limit }
   );
