@@ -90,31 +90,35 @@ app.post('/api/users/:uid/exercises', async (req, res) => {
  */
 app.get('/api/users/:uid/logs', async (req, res) => {
   const uid = req.params.uid;
+  if (!/\w{24}/.test(uid)) return res.json({ error: 'uid 不正确' });
+
   const user = await User.findById(uid);
+  if (user === null) return res.json({ error: `uid: ${uid} 不存在` });
   const username = user.username;
 
+  // 初始按日期过滤参数
   let { from, to, limit } = req.query;
-  let count = await Exercise.countDocuments({
-    user: uid,
-    date: { $gt: from, $lt: to }
-  });
+  if (!from) from = '1970-01-01';
+  if (!to) to = Date();
+
+  // 处理统计字段 && 定义查询过滤对象 && 及查询数量参数
+  const queryfilter = { user: uid, date: { $gt: from, $lt: to } };
+  let count = await Exercise.countDocuments(queryfilter);
 
   if (limit && limit !== '0') {
     limit = Number.parseInt(limit);
     count = Math.min(count, limit);
   }
 
+  // 获取运动列表
   const exercises = await Exercise.find(
-    {
-      user: uid,
-      date: { $gt: from, $lt: to }
-    },
+    queryfilter,
     'description duration date -_id',
     { limit: limit }
   );
 
   const log = exercises.map(item => {
-    item = item.toObject();
+    item = item.toObject(); // 转为普通对象，方便修改对象的值
     item.date = new Date(item.date).toDateString();
     return item;
   });
