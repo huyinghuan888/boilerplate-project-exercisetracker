@@ -20,7 +20,7 @@ const Exercise = mongoose.model('Exercise', exerciseSchema);
 /**
  * 创建新运动
  */
-async function createExercise(exerciseDto, result) {
+function createExercise(exerciseDto, result) {
   const exercise = new Exercise(exerciseDto);
 
   exercise.save((error, data) => {

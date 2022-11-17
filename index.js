@@ -98,25 +98,18 @@ app.get('/api/users/:uid/logs', async (req, res) => {
 
   // 初始按日期过滤参数
   let { from, to, limit } = req.query;
-  if (!from) from = '1970-01-01';
-  if (!to) to = Date();
-
-  // 处理统计字段 && 定义查询过滤对象 && 及查询数量参数
-  const queryfilter = { user: uid, date: { $gt: from, $lt: to } };
-  let count = await Exercise.countDocuments(queryfilter);
-
-  if (limit && limit !== '0') {
-    limit = Number.parseInt(limit);
-    count = Math.min(count, limit);
-  }
+  if (from === '' || from === undefined) from = '1970-01-01';
+  if (to === '' || to === undefined) to = new Date().toISOString();
+  if (limit !== '' && limit !== undefined) limit = Number.parseInt(limit);
 
   // 获取运动列表
   const exercises = await Exercise.find(
-    queryfilter,
+    { user: uid, date: { $gt: from, $lt: to } },
     'description duration date -_id',
     { limit: limit }
   );
 
+  const count = exercises.length;
   const log = exercises.map(item => {
     item = item.toObject(); // 转为普通对象，方便修改对象的值
     item.date = new Date(item.date).toDateString();
