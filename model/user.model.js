@@ -3,6 +3,15 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true }
 });
+// get '/api/users/:uid/logs' - Solution 2
+// 添加虚拟字段
+// userSchema.virtual('exercises', {
+//   ref: 'Exercise',
+//   localField: '_id',
+//   foreignField: 'user',
+//   justOne: false
+// });
+
 const User = mongoose.model('User', userSchema);
 
 /**

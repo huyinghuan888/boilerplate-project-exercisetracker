@@ -119,6 +119,39 @@ app.get('/api/users/:uid/logs', async (req, res) => {
   res.json({ _id: uid, username, count, log });
 });
 
+/**
+ * 获取 _id 用户的 exercises 运动日志
+ * Solution 2
+ * 注意：方案二仅演示如何通过 user 用户直接查询用户的运动日志，不是一个适合的方案。
+ * 原因：由于 from to limit 无法方便的作用到 exercises 虚拟字段，要实现筛选会比较麻烦。
+ *      另一方面，由于会把所有的运动日志都查询出来，所以性能上也不是最优方案。
+ */
+// app.get('/api/users/:uid/logs', async (req, res) => {
+//   const uid = req.params.uid;
+//   if (!/\w{24}/.test(uid)) return res.json({ error: 'uid 不正确' });
+
+//   // 获取用户信息，及运动日志(虚拟字段)
+//   const user = await User.findById(uid).populate('exercises');
+//   const exercises = user.exercises;
+
+//   const count = exercises.length;
+//   const log = exercises.map(item => {
+//     item = item.toObject();
+//     item.date = new Date(item.date).toDateString();
+//     delete item._id;
+//     delete item.user;
+//     delete item.__v;
+//     return item;
+//   });
+
+//   const result = user.toObject();
+//   result.count = count;
+//   result.log = log;
+//   delete result.__v;
+
+//   res.json(result);
+// });
+
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port);
 });
